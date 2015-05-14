@@ -1,7 +1,10 @@
 package workspace;
 
+import org.omg.CORBA.INTERNAL;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.Scanner;
@@ -11,7 +14,7 @@ public class bookshop {
     // TODO AT LAST change the debug state
     private static boolean logged_in = false;
     private static boolean leave = false;
-
+    private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     private static String cname = "";
     private static int cid = 0;
 
@@ -64,10 +67,25 @@ public class bookshop {
         System.out.println("**************************************");
         System.out.println();
     }
+
+    private static boolean choose(String a, char c1, char c2) {
+        String tmp = null;
+        do {
+            System.out.println(a + " [" + c1 + '/' + c2 + ']');
+            try {
+                tmp = in.readLine();
+            } catch (Exception e) {
+                System.out.println(">_< Parse input error!!!");
+                if (debug) System.err.println(e.getMessage());
+                return false;
+            }
+        } while (tmp.equals("") || (tmp.charAt(0) != c1 && tmp.charAt(0) != c2));
+        return tmp.charAt(0) == c2;
+    }
+
     public static void main(String[] args) {
         myconnector con = null;
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 	    Scanner cin = new Scanner(new BufferedInputStream(System.in));
 
         if (!debug) Hello_world();
@@ -221,15 +239,10 @@ public class bookshop {
                     }
                     if (!flag && rs.next()) {
                         String tmp;
-                        do {
-                            System.out.println("Log in as administrator? [y/n]");
-                            tmp = in.readLine();
-                        } while (tmp.equals("") || (tmp.charAt(0) != 'y' && tmp.charAt(0) != 'n'));
-                        admin = tmp.charAt(0) == 'y';
+                        admin = !choose("Log in as administrator?", 'y', 'n');
                     } else admin = false;
 
                     while (!leave && admin) {
-                        print_split();
                         display_admin();
                         String choice = "";
                         int c = 0;
@@ -245,14 +258,11 @@ public class bookshop {
                         } else if (c == 2) {
                             logged_in = admin = false; break;
                         } else if (c == 3) {
-                            do {
-                                System.out.println("Input the one's customer id or user name ? [c/u]");
-                                choice = in.readLine();
-                            } while (choice.equals("") || (choice.charAt(0) != 'c' && choice.charAt(0) != 'u'));
+                            flag2 = choose("Input the one's customer id or user name ?", 'c', 'u');
 
                             int k = 0; flag = false;
 
-                            if (choice.charAt(0) == 'c') {
+                            if (!flag2) {
                                 do {
                                     System.out.println("Please input the one's customer id");
                                     choice = in.readLine();
@@ -312,15 +322,10 @@ public class bookshop {
                                 continue;
                             }
 
-                            do {
-                                System.out.println("\tYou can change in two ways");
-                                System.out.println(" 1. Make the user customer");
-                                System.out.println(" 2. Make the user administrator");
-                                choice = in.readLine();
-                            } while (choice.equals("") || (choice.charAt(0) != '1' && choice.charAt(0) != '2'));
+                            flag2 = choose("\tYou can change in two ways\n 1. Make the user customer\n2. Make the user administrator", '1', '2');
 
                             sql = "update customer set admin =";
-                            if (choice.charAt(0) == '2') sql += "true";
+                            if (flag) sql += "true";
                                 else sql += "false";
                             sql += " where cid = "+Integer.toString(k)+";";
 
@@ -334,7 +339,111 @@ public class bookshop {
                             }
                             System.out.println("0w0 Changed authority successfully!!!");
                         } else if (c == 4) {
+                            long isbn = 0; flag1 = false;
+                            do {
+                                if (flag1) System.out.println("Please input the 10 bit isbn in the correct way:");
+                                    else System.out.println("Please input the 10 bit isbn for the new book:");
+                                choice = in.readLine();
+                                flag = false; isbn = 0;
+                                if (choice.length() != 10) {
+                                    flag = true; continue;
+                                }
+                                for (int i = 0; i < choice.length(); i++) {
+                                    if (choice.charAt(i) < '0' || choice.charAt(i) > '9') {
+                                        flag = true; break;
+                                    } else {
+                                        isbn = isbn * 10 + choice.charAt(i) - '0';
+                                    }
+                                }
+                            } while (flag);
 
+                            sql = "select * from book where isbn = "+Long.toString(isbn)+";";
+                            try {
+                                rs = con.stmt.executeQuery(sql);
+                            } catch (Exception e) {
+                                System.out.println("Find duplicate book error!");
+                                if (debug) e.printStackTrace();
+                                continue;
+                            }
+
+                            if (rs.next()) {
+                                System.out.println(">_< Duplicate Book Exists !!! Please add the copy number!!!");
+                                continue;
+                            }
+
+                            Boolean format = null;
+                            do {
+                                System.out.println("Please input the cover format of the book[soft/hard/unknown]");
+                                choice = in.readLine();
+                                if (choice.equals("soft")) {
+                                    format = true; break;
+                                } else if (choice.equals("hard")) {
+                                    format = false; break;
+                                } else if (choice.equals("unknown")) {
+                                    format = null; break;
+                                }
+                            } while (true);
+
+                            String w1, w2, w3;
+                            do {
+                                System.out.println("Please input the key words of the book in less than 100 characters");
+                                w1 = in.readLine();
+                            } while (w1.length() > 100);
+
+                            do {
+                                System.out.println("Please input the title words of the book in less than 100 characters");
+                                w2 = in.readLine();
+                            } while (w2.length() > 100);
+
+                            do {
+                                System.out.println("Please input the subjects of the book in less than 100 characters");
+                                w3 = in.readLine();
+                            } while (w3.length() > 100);
+
+                            double price = 0;
+
+                            flag = false;
+                            do {
+                                System.out.println("Please input the price per book:");
+                                choice = in.readLine();
+                                try {
+                                    price = Double.parseDouble(choice);
+                                } catch (Exception e) {
+                                    System.out.println(">_< Parse book price error!!!");
+                                    if (debug) System.err.println(e.getMessage());
+                                    flag = true; break;
+                                }
+                            } while (price <= 0);
+                            if (flag) continue;
+
+                            int num = 0; flag = false;
+                            do {
+                                System.out.println("Pleas input the number of copies of the book:");
+                                choice = in.readLine();
+                                try {
+                                    num = Integer.parseInt(choice);
+                                } catch (Exception e) {
+                                    System.out.println(">_< Parce book number error!!!");
+                                    if (debug) System.err.println(e.getMessage());
+                                    flag = true;
+                                    break;
+                                }
+                            } while (num < 0);
+                            if (flag) continue;
+
+                            sql = "insert into book values(null, "+Long.toString(isbn)+", ";
+                            if (format != null) sql += format.toString(); else sql += "null";
+                            sql += ", \'" + w1 + "\', \'" + w2 + "\', \'" + w3 + "\', "+Double.toString(price);
+                            sql += ", " + Integer.toString(num) + ");";
+
+                            try {
+                                con.stmt.execute(sql);
+                            } catch (Exception e) {
+                                System.out.println(">_< Add book information to SQL error!!");
+                                if (debug) e.printStackTrace();
+                                continue;
+                            }
+                            System.out.println("Add book information successfully !!!");
                         } else if (c == 5) {
 
                         } else if (c == 6) {
@@ -347,7 +456,6 @@ public class bookshop {
                     }
 
                     while (!leave && logged_in) {
-                        print_split();
                         display_customer();
 
                         System.out.println("Building...");
