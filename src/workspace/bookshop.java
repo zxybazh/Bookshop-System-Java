@@ -1,10 +1,7 @@
 package workspace;
 
-import org.omg.CORBA.INTERNAL;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.Scanner;
@@ -17,6 +14,7 @@ public class bookshop {
     private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     private static String cname = "";
     private static int cid = 0;
+    private static myconnector con = null;
 
     private static void Hello_world() {
         myfun.print_title();
@@ -82,11 +80,26 @@ public class bookshop {
         } while (tmp.equals("") || (tmp.charAt(0) != c1 && tmp.charAt(0) != c2));
         return tmp.charAt(0) == c2;
     }
+    /*
+    private static void runsql(String sql) {
+        try {
+            con.stmt.execute(sql);
+        } catch (Exception e) {
+            System.out.println(">_< Error while excecuting "+sql);
+            if (debug) e.printStackTrace();
+        }
+    }
 
+    private static ResultSet querysql(String sql) {
+        try {
+            con.stmt.executeQuery(sql);
+        } catch (Exception e) {
+            System.out.println(">_< Error while querying "+sql);
+            if (debug) e.printStackTrace();
+        }
+    }
+    */
     public static void main(String[] args) {
-        myconnector con = null;
-
-	    Scanner cin = new Scanner(new BufferedInputStream(System.in));
 
         if (!debug) Hello_world();
         try {
@@ -471,7 +484,6 @@ public class bookshop {
             System.out.println("My alipay account is zxybazh@qq.com");
             System.out.println("Buy me a cup of coffee please :)");
             System.out.println("Welcome and Goodbye~");
-            cin.close();
             con.closeConnection();
         } catch (Exception e) {
         	 if (debug) e.printStackTrace();
