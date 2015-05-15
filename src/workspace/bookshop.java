@@ -36,7 +36,8 @@ public class bookshop {
         System.out.println(" 5. Add some copies to some book");
         System.out.println(" 6. Show statistics of this semester");
         System.out.println(" 7. Give user awards");
-        System.out.println(" 8. Exit peacefully without hesitation");
+        System.out.println(" 8. Book browse");
+        System.out.println(" 9. Exit peacefully without hesitation");
 
     }
 
@@ -336,7 +337,7 @@ public class bookshop {
                                 continue;
                             }
 
-                            flag2 = choose("\tYou can change in two ways\n 1. Make the user customer\n2. Make the user administrator", '1', '2');
+                            flag2 = choose("\tYou can change in two ways\n 1. Make the user customer\n 2. Make the user administrator", '1', '2');
 
                             sql = "update customer set admin =";
                             if (flag) sql += "true";
@@ -485,7 +486,7 @@ public class bookshop {
                                 }
                             } else {
                                 choice = in.readLine();
-                                if (choice.length() != 11) {
+                                if (choice.length() != 10) {
                                     alert("ISBN length incorrect"); continue;
                                 }
                                 flag1 = false;
@@ -525,8 +526,8 @@ public class bookshop {
                                 }
                             } while (num <= 0);
                             if (flag) continue;
-                            sql = "update book set number_of_copies number_of_copies+"+choice+" where bid = "+
-                                    Integer.toString(bid)+";";
+                            sql = "update book set number_of_copies = number_of_copies + " + choice + " " +
+                                    "where bid = "+ Integer.toString(bid)+";";
                             try {
                                 con.stmt.execute(sql);
                             } catch (Exception e) {
@@ -536,9 +537,40 @@ public class bookshop {
                             }
                             System.out.println("0w0 Add book copy number successfully!!!");
                         } else if (c == 6) {
+                            do {
+                                System.out.println("\tWhat statistic do you want to know ?");
+                                System.out.println(" 1. the list of the m(default m= 10) most popular books");
+                                System.out.println(" 2. the list of the m(default m= 10) most popular authors");
+                                System.out.println(" 3. the list of the m(default m= 10) most popular publishers");
+
+                                choice = in.readLine();
+                            } while (choice.equals("") || (choice.charAt(0) < '1' || choice.charAt(0) > '2'));
+
+                            String tmp;
+                            System.out.println("Please input m(blank for default 10)");
+                            tmp = in.readLine(); int m = 0;
+                            if (tmp.equals("")) m = 10; else {
+                                try {
+                                    m = Integer.parseInt(tmp);
+                                } catch (Exception e) {
+                                    alert("Parse statistic number m error");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
+                            }
+                            //TODO statistic feature
+                            if (choice.charAt(0) == '1') {
+
+                            } else if (choice.charAt(0) == '2') {
+
+                            } else {
+
+                            }
 
                         } else if (c == 7) {
-
+                            //TODO User Awards
+                        } else if (c == 8) {
+                            //TODO BOOK BROWSE
                         } else {
                             leave = true; break;
                         }
