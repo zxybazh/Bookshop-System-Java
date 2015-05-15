@@ -3,6 +3,7 @@ package workspace;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class bookshop {
     final public static boolean debug = true;
@@ -78,13 +79,23 @@ public class bookshop {
         } while (tmp.equals("") || (tmp.charAt(0) != c1 && tmp.charAt(0) != c2));
         return tmp.charAt(0) == c2;
     }
-    private static void alert(String s) {
+    public static void alert(String s) {
         System.out.println(">_< " + s + "!!!");
+    }
+    public static String polish(String a) {
+        String b = "";
+        for (int i = 0; i < a.length(); i++) {
+            if (a.charAt(i) == '\'') {
+                b += '\\';
+            }
+            b += a.charAt(i);
+        }
+        return b;
     }
     /*
     private static void runsql(String sql) {
         try {
-            con.stmt.execute(sql);
+            con.stmt.execut(sql);
         } catch (Exception e) {
             System.out.println(">_< Error while excecuting "+sql);
             if (debug) e.printStackTrace();
@@ -167,7 +178,8 @@ public class bookshop {
                                 continue;
                             }
                             try {
-                                rs = con.stmt.executeQuery("select * from customer where login_name = \'" + cname + "\';");
+                                rs = con.stmt.executeQuery("select * from customer where login_name = \'"
+                                        + polish(cname) + "\';");
                             } catch (Exception e) {
                                 System.out.println(">_< Query username duplicate error at sql");
                                 if (debug) e.printStackTrace();
@@ -310,7 +322,7 @@ public class bookshop {
                                     choice = in.readLine();
                                     try {
                                         rs = con.stmt.executeQuery(
-                                                "select cid from customer where login_name = \'" +choice+"\';");
+                                                "select cid from customer where login_name = \'" +polish(choice)+"\';");
                                     } catch (Exception e) {
                                         System.out.println(">_< Find the user with user name error");
                                         if (debug) e.printStackTrace();
@@ -336,7 +348,7 @@ public class bookshop {
                                 continue;
                             }
 
-                            flag2 = choose("\tYou can change in two ways\n 1. Make the user customer\n 2. Make the user administrator", '1', '2');
+                            flag = choose("\tYou can change in two ways\n 1. Make the user customer\n 2. Make the user administrator", '1', '2');
 
                             sql = "update customer set admin =";
                             if (flag) sql += "true";
@@ -344,7 +356,7 @@ public class bookshop {
                             sql += " where cid = "+Integer.toString(k)+";";
 
                             try {
-                                System.out.println(sql);
+                                //System.out.println(sql);
                                 con.stmt.execute(sql);
                             } catch (Exception e) {
                                 System.out.println(">_< change authority error");
@@ -430,8 +442,6 @@ public class bookshop {
                             } while (price <= 0);
                             if (flag) continue;
 
-                            //TODO add writer and publisher info.
-
                             int num = 0; flag = false;
                             do {
                                 System.out.println("Pleas input the number of copies of the book:");
@@ -449,8 +459,10 @@ public class bookshop {
 
                             sql = "insert into book values(null, "+isbn+", ";
                             if (format != null) sql += format.toString(); else sql += "null";
-                            sql += ", \'" + w1 + "\', \'" + w2 + "\', \'" + w3 + "\', "+Double.toString(price);
+                            sql += ", \'" + polish(w1) + "\', \'" + polish(w2) + "\', \'" + polish(w3);
+                            sql += "\', " + Double.toString(price);
                             sql += ", " + Integer.toString(num) + ");";
+                            //System.out.println(sql);
 
                             try {
                                 con.stmt.execute(sql);
@@ -460,6 +472,67 @@ public class bookshop {
                                 continue;
                             }
                             System.out.println("Add book information successfully !!!");
+                            try {
+                                rs = con.stmt.executeQuery("select bid from book where isbn=\'" + isbn + "\';");
+                            } catch (Exception e) {
+                                alert("Find book id error");
+                                if (debug) e.printStackTrace();
+                                continue;
+                            }
+                            rs.next(); int bid = rs.getInt(1);
+                            //assume insert successfully
+
+                            System.out.println("Please input the publisher of the book");
+                            flag = false;
+                            do {
+                                if (flag) System.out.println("Publisher name too long");
+                                flag =true; choice = in.readLine();
+                            } while (choice.length() > 40);
+                            int pid = mypublish.get_pid(con.stmt, choice);
+                            if (pid == -1) continue;
+                            System.out.println("Please input the publish year of the book");
+                            int year = 0;
+                            choice = in.readLine();
+                            try {
+                                year = Integer.parseInt(choice);
+                            } catch (Exception e) {
+                                alert("Parse publish year error");
+                                if (debug) System.err.println(e.getMessage());
+                                continue;
+                            }
+                            if (!mypublish.publish(con.stmt, pid, bid, year)) continue;
+
+
+                            System.out.println("Please input the writer(s) of the book one by one");
+                            flag = flag2 = false;
+                            ArrayList<Integer> tmp = new ArrayList<>();
+                            do {
+                                flag1 = false;
+                                do {
+                                    if (flag1) alert("Author name too long"); flag1 = true;
+                                    choice = in.readLine();
+                                } while (choice.length() > 40);
+                                int aid = 0;
+                                aid = mywriter.get_aid(con.stmt, choice);
+                                if (aid == -1 || !mywriter.iwrite(con.stmt, aid, bid)) {
+                                    flag2= true; break;
+                                }
+                                flag = choose("Do you want to add another author?", 'y', 'n');
+                                tmp.add(aid);
+                            } while (!flag);
+                            if (flag2) continue;
+
+                            flag = false;
+                            for (int i = 0; i < tmp.size(); i++) {
+                                for (int j = 0; j < i; j++) {
+                                    if (!mywriter.coauthor(con.stmt, bid, tmp.indexOf(i), tmp.indexOf(j))) {
+                                        flag = true; break;
+                                    }
+                                }
+                                if (flag) break;
+                            }
+                            if (flag) continue;
+
                         } else if (c == 5) {
                             flag1 = choose("Please Input the book id or isbn of the book", 'b', 'i');
                             int bid = 0;

@@ -13,7 +13,7 @@ public class mylogin {
         String query;
 		ResultSet rs;
 
-		query="select cid from customer where login_name = \'" + cname + "\' and password = \'" + password + "\';";
+		query="select cid from customer where login_name = \'" + bookshop.polish(cname) + "\' and password = \'" + password + "\';";
 		try{
 			rs = stmt.executeQuery(query);
 

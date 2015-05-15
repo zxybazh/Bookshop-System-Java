@@ -6,8 +6,8 @@ import java.sql.Statement;
 public class myregister {
     public static void register(Statement stmt, String cname, String password,
                                 String full_name, String addr, long phone) throws SQLException {
-        String sql = "Insert into customer values(null, \'" + cname + "\', \'"+ full_name;
-        sql += "\', \'" + mymd5.getMD5(password) + "\', \'" + addr;
+        String sql = "Insert into customer values(null, \'" + bookshop.polish(cname) + "\', \'"+ bookshop.polish(full_name);
+        sql += "\', \'" + mymd5.getMD5(password) + "\', \'" + bookshop.polish(addr);
         sql += "\', " + String.valueOf(phone) + ", False);";
         //System.out.println(sql);
         try {
