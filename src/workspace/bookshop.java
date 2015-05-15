@@ -1,10 +1,8 @@
 package workspace;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
-import java.util.Scanner;
 
 public class bookshop {
     final public static boolean debug = true;
@@ -79,6 +77,9 @@ public class bookshop {
             }
         } while (tmp.equals("") || (tmp.charAt(0) != c1 && tmp.charAt(0) != c2));
         return tmp.charAt(0) == c2;
+    }
+    private static void alert(String s) {
+        System.out.println(">_< " + s + "!!!");
     }
     /*
     private static void runsql(String sql) {
@@ -458,7 +459,82 @@ public class bookshop {
                             }
                             System.out.println("Add book information successfully !!!");
                         } else if (c == 5) {
-
+                            flag1 = choose("Please Input the book id or isbn of the book", 'b', 'i');
+                            int bid = 0;
+                            if (!flag1) {
+                                choice = in.readLine();
+                                try {
+                                    bid = Integer.parseInt(choice);
+                                } catch(Exception e) {
+                                    System.out.println(">_< Parse book id error!!!");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
+                                sql = "select * from book where bid = " + Integer.toString(bid) + ";";
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Check book id existence error");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
+                                if (rs.next()) {
+                                    System.out.println("Find the specific book successfully");
+                                } else {
+                                    alert("Can\'t find the specific book"); continue;
+                                }
+                            } else {
+                                choice = in.readLine();
+                                if (choice.length() != 11) {
+                                    alert("ISBN length incorrect"); continue;
+                                }
+                                flag1 = false;
+                                for (int i = 0; i < choice.length(); i++) {
+                                    if (choice.charAt(i) < '0' || choice.charAt(i) > '9') {
+                                        flag1 = true;
+                                    }
+                                }
+                                if (flag1) {
+                                    alert("ISBN format error"); continue;
+                                }
+                                sql = "select bid from book where isbn = " + choice + ";" ;
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Find the book by isbn error");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
+                                if (rs.next()) {
+                                    bid = rs.getInt(1);
+                                    System.out.println("Find the specific book successfully");
+                                } else {
+                                    alert("Can\'t find the book by isbn"); continue;
+                                }
+                            }
+                            int num = 0; flag = false;
+                            do {
+                                System.out.println("How many copies you want to add?");
+                                choice = in.readLine();
+                                try {
+                                    num = Integer.parseInt(choice);
+                                } catch (Exception e) {
+                                    alert("Parse add copy number error");
+                                    if (debug) System.err.println(e.getMessage());
+                                    num = -1; flag = true; break;
+                                }
+                            } while (num <= 0);
+                            if (flag) continue;
+                            sql = "update book set number_of_copies number_of_copies+"+choice+" where bid = "+
+                                    Integer.toString(bid)+";";
+                            try {
+                                con.stmt.execute(sql);
+                            } catch (Exception e) {
+                                alert("Add copy number error at sql");
+                                if (debug) System.err.println(e.getMessage());
+                                continue;
+                            }
+                            System.out.println("0w0 Add book copy number successfully!!!");
                         } else if (c == 6) {
 
                         } else if (c == 7) {
