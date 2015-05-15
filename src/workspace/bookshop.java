@@ -1,5 +1,8 @@
 package workspace;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.omg.CORBA.INTERNAL;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
@@ -792,11 +795,162 @@ public class bookshop {
 
                     while (!leave && logged_in) {
                         display_customer();
+                        String choice = in.readLine(); int c = 0;
+                        try {
+                            c = Integer.parseInt(choice);
+                        } catch (Exception e) {
+                            alert("Parse customer's choice error");
+                            if (debug) System.err.println(e.getMessage());
+                            continue;
+                        }
+                        if (c < 1 || c > 12) continue;
+                        if (c == 1) {
+                            Boolean tmp = myadmin.Ques(con.stmt, cid);
+                            if (tmp == null) continue;
+                            if (tmp == false) {
+                                alert("No administrator authority");
+                                continue;
+                            }
+                            admin = true; break;
+                        } else if (c == 2) {
+                            logged_in = false; admin = false; break;
+                        } else if (c == 3) {
+                            do {
+                                do {
+                                    System.out.println("\tNow what do you want to change?");
+                                    System.out.println(" 1. My full name");
+                                    System.out.println(" 2. Password");
+                                    System.out.println(" 3. My address");
+                                    System.out.println(" 4. My phone number");
+                                    System.out.println(" 5. Leave profile change with smile :)");
+                                    choice = in.readLine();
+                                } while (choice.equals("") && (choice.charAt(0) < '1' || choice.charAt(0) > '5'));
+                                int k = choice.charAt(0) - '0';
+                                if (k == 1) {
+                                    flag = false;
+                                    do {
+                                        if (!flag) System.out.println("Please input your full name(3~30 character)");
+                                            else alert("Full name length not correct");
+                                        flag = true;
+                                        choice = in.readLine();
+                                    } while (choice.length() > 30 || choice.length() < 3);
+                                    sql = "update customer set full_name = \'"+ polish(choice) + "\' where cid = " +
+                                            Integer.toString(cid) + ";";
+                                    try {
+                                        con.stmt.execute(sql);
+                                    } catch (Exception e) {
+                                        alert("change full name error");
+                                        if (debug) System.err.println(e.getMessage());
+                                        continue;
+                                    }
+                                    System.out.println(">_< Changed full name successfully!!!");
+                                } else if (k == 2) {
+                                    flag = false; flag1 = false;
+                                    Boolean tmp;
+                                    do {
+                                        if (!flag1) System.out.println("Please input your old password");
+                                        else System.out.println("old password wrong");
+                                        flag1 = true;
+                                        choice = in.readLine();
+                                        tmp = mylogin.check(con.stmt, cid, mymd5.getMD5(choice));
+                                        if (tmp == null) {
+                                            flag = true; break;
+                                        }
+                                    } while (tmp == false);
+                                    if (flag) continue;
 
-                        System.out.println("Building...");
-                        leave = true;
-                        //TODO add customer feature.
+                                    String password, cur;
 
+                                    do {
+                                        System.out.println("Please input your new password(3~30 characters)");
+                                        cur = in.readLine();
+                                        System.out.println("Please confirm your new password");
+                                        password = in.readLine();
+                                    } while (!cur.equals(password) || cur.length() < 3 || cur.length() > 30);
+                                    sql = "update customer set password = \'"+mymd5.getMD5(cur)+"\' where cid = "+
+                                            Integer.toString(cid) + ";";
+                                    try {
+                                        con.stmt.execute(sql);
+                                    } catch (Exception e) {
+                                        alert("update password error");
+                                        if (debug) System.err.println(e.getMessage());
+                                        continue;
+                                    }
+                                    System.out.println("0w0 Update password successfully!!!");
+                                } else if (k == 3) {
+                                    flag = false;
+                                    do {
+                                        if (!flag)
+                                            System.out.println("Please input your address(less than 100 character)");
+                                        else alert("address length not correct");
+                                        flag = true;
+                                        choice = in.readLine();
+                                    } while (choice.length() > 100);
+                                    sql = "update customer set address = \'"+ polish(choice) + "\' where cid = " +
+                                            Integer.toString(cid) + ";";
+                                    try {
+                                        con.stmt.execute(sql);
+                                    } catch (Exception e) {
+                                        alert("change address error");
+                                        if (debug) System.err.println(e.getMessage());
+                                        continue;
+                                    }
+                                    System.out.println(">_< Changed address successfully!!!");
+                                } else if (k == 4) {
+                                    long phone = 0;
+
+                                    flag = false; flag1 = false;
+                                    do {
+                                        if (!flag)
+                                            System.out.println("Please input your phone number(11 bit)");
+                                        else alert("phone number format not correct");
+                                        choice = in.readLine();
+                                        flag = true; flag1 = (choice.length() != 11);
+                                        for (int i = 0; i < choice.length(); i++) {
+                                            if (choice.charAt(i) <'0' || choice.charAt(i) > '9') {
+                                                flag1 = true; break;
+                                            }
+                                        }
+                                    } while (flag1);
+
+                                    sql = "update customer set phone_number = \'"+ choice + "\' where cid = " +
+                                            Integer.toString(cid) + ";";
+                                    try {
+                                        con.stmt.execute(sql);
+                                    } catch (Exception e) {
+                                        alert("change phone number error");
+                                        if (debug) System.err.println(e.getMessage());
+                                        continue;
+                                    }
+                                    System.out.println(">_< Changed phone number successfully!!!");
+                                } else break;
+                            } while (true);
+                        } else if (c == 4) {
+                            flag = choose("How to choose the book you want to order? book id or isbn", 'b', 'i');
+                            int bid = 0;
+                            if (!flag) {
+                                choice = in.readLine();
+                                try {
+                                    bid = Integer.parseInt(choice);
+                                } catch (Exception e) {
+                                    alert("parse book id error while shopping");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
+                                //TODO VALIDATE BOOK ID
+                            } else  {
+                                //TODO ISBN CASE
+                            }
+                        } else if (c == 5) {
+                        } else if (c == 6) {
+                        } else if (c == 7) {
+                        } else if (c == 8) {
+                        } else if (c == 9) {
+                        } else if (c ==10) {
+                        } else if (c ==11) {
+                        } else {
+                            leave = true;
+                        }
                     }
 
                 } //else choose to leave

@@ -2,6 +2,7 @@ package workspace;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -23,9 +24,29 @@ public class mylogin {
 				return 0;
 			}
         } catch(Exception e) {
-			System.err.println("Unable to execute query:"+query+"\n");
-			System.err.println(e.getMessage());
+            bookshop.alert("login process error");
+            if (bookshop.debug) System.err.println("Unable to execute query:"+query+"\n");
+			if (bookshop.debug) System.err.println(e.getMessage());
 			throw(e);
 		}
+    }
+    public static Boolean check(Statement stmt, int cid, String password) {
+        String sql = "select * from customer where cid = "+Integer.toString(cid)+" and password = \'"
+                +bookshop.polish(password)+"\';";
+        ResultSet rs;
+        try {
+            rs = stmt.executeQuery(sql);
+        } catch (Exception e) {
+            bookshop.alert("check password error");
+            if (bookshop.debug) System.err.println(e.getMessage());
+            return null;
+        }
+        try {
+            return rs.next();
+        } catch (SQLException e) {
+            bookshop.alert("check password sql error");
+            if (bookshop.debug) System.err.println(e.getMessage());
+            return null;
+        }
     }
 }
