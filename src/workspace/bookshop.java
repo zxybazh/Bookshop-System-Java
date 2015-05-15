@@ -36,8 +36,7 @@ public class bookshop {
         System.out.println(" 5. Add some copies to some book");
         System.out.println(" 6. Show statistics of this semester");
         System.out.println(" 7. Give user awards");
-        System.out.println(" 8. Book browse");
-        System.out.println(" 9. Exit peacefully without hesitation");
+        System.out.println(" 8. Exit peacefully without hesitation");
 
     }
 
@@ -354,25 +353,25 @@ public class bookshop {
                             }
                             System.out.println("0w0 Changed authority successfully!!!");
                         } else if (c == 4) {
-                            long isbn = 0; flag1 = false;
+                            String isbn = null; flag1 = false;
                             do {
                                 if (flag1) System.out.println("Please input the 10 bit isbn in the correct way:");
                                     else System.out.println("Please input the 10 bit isbn for the new book:");
                                 choice = in.readLine();
-                                flag = false; isbn = 0;
+                                flag = false; flag1 = true;
                                 if (choice.length() != 10) {
                                     flag = true; continue;
                                 }
+                                choice = choice.toUpperCase();
                                 for (int i = 0; i < choice.length(); i++) {
-                                    if (choice.charAt(i) < '0' || choice.charAt(i) > '9') {
+                                    if ((choice.charAt(i) < '0' || choice.charAt(i) > '9') && choice.charAt(i) != 'X') {
                                         flag = true; break;
-                                    } else {
-                                        isbn = isbn * 10 + choice.charAt(i) - '0';
                                     }
                                 }
                             } while (flag);
 
-                            sql = "select * from book where isbn = "+Long.toString(isbn)+";";
+                            isbn = choice;
+                            sql = "select * from book where isbn = "+choice+";";
                             try {
                                 rs = con.stmt.executeQuery(sql);
                             } catch (Exception e) {
@@ -431,6 +430,8 @@ public class bookshop {
                             } while (price <= 0);
                             if (flag) continue;
 
+                            //TODO add writer and publisher info.
+
                             int num = 0; flag = false;
                             do {
                                 System.out.println("Pleas input the number of copies of the book:");
@@ -446,7 +447,7 @@ public class bookshop {
                             } while (num < 0);
                             if (flag) continue;
 
-                            sql = "insert into book values(null, "+Long.toString(isbn)+", ";
+                            sql = "insert into book values(null, "+isbn+", ";
                             if (format != null) sql += format.toString(); else sql += "null";
                             sql += ", \'" + w1 + "\', \'" + w2 + "\', \'" + w3 + "\', "+Double.toString(price);
                             sql += ", " + Integer.toString(num) + ");";
@@ -486,12 +487,13 @@ public class bookshop {
                                 }
                             } else {
                                 choice = in.readLine();
+                                choice = choice.toUpperCase();
                                 if (choice.length() != 10) {
                                     alert("ISBN length incorrect"); continue;
                                 }
                                 flag1 = false;
                                 for (int i = 0; i < choice.length(); i++) {
-                                    if (choice.charAt(i) < '0' || choice.charAt(i) > '9') {
+                                    if ((choice.charAt(i) < '0' || choice.charAt(i) > '9') && choice.charAt(i) != 'X') {
                                         flag1 = true;
                                     }
                                 }
@@ -539,12 +541,12 @@ public class bookshop {
                         } else if (c == 6) {
                             do {
                                 System.out.println("\tWhat statistic do you want to know ?");
-                                System.out.println(" 1. the list of the m(default m= 10) most popular books");
-                                System.out.println(" 2. the list of the m(default m= 10) most popular authors");
-                                System.out.println(" 3. the list of the m(default m= 10) most popular publishers");
+                                System.out.println(" 1. the list of the m(default m = 10) most popular books");
+                                System.out.println(" 2. the list of the m(default m = 10) most popular authors");
+                                System.out.println(" 3. the list of the m(default m = 10) most popular publishers");
 
                                 choice = in.readLine();
-                            } while (choice.equals("") || (choice.charAt(0) < '1' || choice.charAt(0) > '2'));
+                            } while (choice.equals("") || (choice.charAt(0) < '1' || choice.charAt(0) > '3'));
 
                             String tmp;
                             System.out.println("Please input m(blank for default 10)");
@@ -558,19 +560,158 @@ public class bookshop {
                                     continue;
                                 }
                             }
-                            //TODO statistic feature
                             if (choice.charAt(0) == '1') {
+                                System.out.println("The list of the m most popular books");
+                                tmp = "(select sum(amount) from buy where buy.bid = book.bid ";
+                                tmp+= "and to_days(now())-to_days(buy_date)<=180)";
+                                sql = "select bid,isbn,"+tmp+"as amount,title_words from book order by amount desc ";
+                                sql+= "limit 0, " + Integer.toString(m) + ";";
 
+                                //System.out.println(sql);
+
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Qurey top m book error");
+                                    if (debug) e.printStackTrace();
+                                    continue;
+                                }
+
+                                System.out.println("book id\t\t\tisbn\t\t\tamount\t\ttitle");
+
+                                while (rs.next()) {
+                                    System.out.printf("%d\t\t\t%s\t\t\t", rs.getInt(1), rs.getString(2));
+                                    if (rs.getString(3) == null) {
+                                        System.out.print(0);
+                                    } else System.out.print(rs.getInt(3));
+                                    System.out.println("\t\t\t"+rs.getString(4));
+                                }
                             } else if (choice.charAt(0) == '2') {
+                                System.out.println("The list of the m most popular authors");
+                                tmp = "(select sum(amount) from buy, iwrite ";
+                                tmp+= "where buy.bid = iwrite.bid and iwrite.aid=author.aid ";
+                                tmp+= "and to_days(now())-to_days(buy_date)<=180)";
+                                sql = "select aid, "+tmp+" as amount, aname from author order by amount desc ";
+                                sql+= "limit 0, " + Integer.toString(m) + ";";
 
+                                //System.out.println(sql);
+
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Qurey top m author error");
+                                    if (debug) e.printStackTrace();
+                                    continue;
+                                }
+
+                                System.out.println("author id\tamount\t\t\tname");
+
+                                while (rs.next()) {
+                                    if (rs.getString(2) != null)
+                                        System.out.printf("%d\t\t\t%d\t\t\t", rs.getInt(1), rs.getInt(2));
+                                    else System.out.printf("%d\t\t\t0\t\t\t", rs.getInt(1));
+                                    System.out.println(rs.getString(3));
+                                }
                             } else {
+                                System.out.println("The list of the m most popular publishers");
+                                tmp = "(select sum(amount) from buy, publish ";
+                                tmp+= "where buy.bid = publish.bid and publish.pid=publisher.pid ";
+                                tmp+= "and to_days(now())-to_days(buy_date)<=180)";
+                                sql = "select pid, "+tmp+" as amount, pname from publisher order by amount desc ";
+                                sql+= "limit 0, " + Integer.toString(m) + ";";
 
+                                //System.out.println(sql);
+
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Qurey top m publisher error");
+                                    if (debug) e.printStackTrace();
+                                    continue;
+                                }
+
+                                System.out.println("publisher id\tamount\t\t\tpublisher name");
+
+                                while (rs.next()) {
+                                     if (rs.getString(2) != null)
+                                        System.out.printf("%d\t\t\t%d\t\t\t", rs.getInt(1), rs.getInt(2));
+                                    else System.out.printf("%d\t\t\t0\t\t\t", rs.getInt(1));
+                                    System.out.println(rs.getString(3));
+                                }
+                            }
+                            System.out.println("Press Enter to continue...");
+                            choice = in.readLine();
+                        } else if (c == 7) {
+                            do {
+                                System.out.println("\tWhat user award do you want to give ?");
+                                System.out.println(" 1. the top m (default 10) trusted user.");
+                                System.out.println(" 2. the top m (default 10) helpful user.");
+                                choice = in.readLine();
+                            } while (choice.equals("") || (choice.charAt(0) < '1' || choice.charAt(0) > '2'));
+
+                            String tmp;
+                            System.out.println("Please input m(blank for default 10)");
+                            tmp = in.readLine();
+                            int m = 0;
+                            if (tmp.equals("")) m = 10;
+                            else {
+                                try {
+                                    m = Integer.parseInt(tmp);
+                                } catch (Exception e) {
+                                    alert("Parse statistic number m error");
+                                    if (debug) System.err.println(e.getMessage());
+                                    continue;
+                                }
                             }
 
-                        } else if (c == 7) {
-                            //TODO User Awards
-                        } else if (c == 8) {
-                            //TODO BOOK BROWSE
+                            if (choice.charAt(0) == '1') {
+                                System.out.println("Here's the top m most trusted user");
+                                tmp = "((select count(*) from judge where cid2 = customer.cid and trust = true)-(";
+                                tmp += "select count(*) from judge where cid2 = customer.cid and trust = false))";
+                                sql = "select customer.cid, " + tmp + " as trust, customer.login_name from customer ";
+                                sql += "order by trust desc limit 0, " + Integer.toString(m) + ";";
+                                //System.out.println(sql);
+
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Qurey top m trusted user error");
+                                    if (debug) e.printStackTrace();
+                                    continue;
+                                }
+
+                                System.out.println("user id\ttrust\t\t\tuser name");
+
+                                while (rs.next()) {
+                                    System.out.printf("%d\t\t\t%d\t\t\t", rs.getInt(1), rs.getInt(2));
+                                    System.out.println(rs.getString(3));
+                                }
+                            } else {
+                                System.out.println("Here's the top m most helpful user");
+                                tmp = "(select sum(rate.score) from rate, feedback where rate.fid = feedback.fid ";
+                                tmp += "and feedback.cid = customer.cid)";
+                                sql = "select customer.cid, " + tmp + " as point, customer.login_name from customer ";
+                                sql += "order by point desc limit 0, " + Integer.toString(m) + ";";
+
+                                System.out.println(sql);
+
+                                try {
+                                    rs = con.stmt.executeQuery(sql);
+                                } catch (Exception e) {
+                                    alert("Qurey top m helpful user error");
+                                    if (debug) e.printStackTrace();
+                                    continue;
+                                }
+
+                                System.out.println("user id\tpoint\t\t\tuser name");
+
+                                while (rs.next()) {
+                                    System.out.printf("%d\t\t\t%d\t\t\t", rs.getInt(1), rs.getInt(2));
+                                    System.out.println(rs.getString(3));
+                                }
+                            }
+                            System.out.println("Press Enter to continue...");
+                            choice = in.readLine();
                         } else {
                             leave = true; break;
                         }
