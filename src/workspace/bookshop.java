@@ -50,7 +50,6 @@ public class bookshop {
         System.out.println(" 1. Log in as an administrator");
         System.out.println(" 2. Log out");
         System.out.println(" 3. Change my profile");
-        System.out.println(" 4. Order some books");
         System.out.println(" 5. Feedback my books");
         System.out.println(" 6. Rate feedback");
         System.out.println(" 7. Book browse");
