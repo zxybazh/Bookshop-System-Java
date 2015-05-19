@@ -17,6 +17,7 @@ Contributed by [**zxybazh**](http://www.zxybazh.me)
 3. In windows system: java -cp "../mysql.jar;." workspace.bookshop (not tested)
 4. In Linux/Unix system: java -cp ../mysql.jar:. workspace.bookshop
 5. Or you can use an IDE (such as *IDEA*). Remember to add mysql.jar as an external jar to your project's Java build path.
+
 ***
 **The Current Situation**
 
