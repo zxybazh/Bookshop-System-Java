@@ -5,7 +5,25 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class mywriter {
-    public static Integer val_aid(Statement stmt, String author) {
+    public static Boolean valid(Statement stmt, int aid) {
+        String sql = "select * from author where aid = "+ Integer.toString(aid) + ";";
+        ResultSet rs;
+        try {
+            rs = stmt.executeQuery(sql);
+        } catch (Exception e) {
+            bookshop.alert("Validate author id error");
+            if (bookshop.debug) System.err.println(e.getMessage());
+            return null;
+        }
+        try {
+            return rs.next();
+        } catch (SQLException e) {
+            bookshop.alert("rs.next() error at sql");
+            if (bookshop.debug) e.printStackTrace();
+            return null;
+        }
+    }
+    public static Integer aname_aid(Statement stmt, String author) {
         String sql = "select * from author where aname = \'" + bookshop.polish(author) + "\';";
         ResultSet rs = null;
         try {
@@ -26,7 +44,7 @@ public class mywriter {
         }
         return -1;
     }
-    public static int get_aid(Statement stmt, String author) {
+    public static int fetch_aid(Statement stmt, String author) {
         String sql = "select * from author where aname = \'" + bookshop.polish(author) + "\';";
         ResultSet rs = null;
         try {
