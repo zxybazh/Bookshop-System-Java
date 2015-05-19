@@ -1,7 +1,5 @@
 package workspace;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
