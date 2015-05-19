@@ -26,7 +26,7 @@ Contributed by [**zxybazh**](http://www.zxybazh.me)
 
 1. move to ./src
 2. javac workspace/*.java
-3. In windows system: java -cp "../mysql.jar;." workspace.bookshop (not tested)
+3. In windows system: java -cp "../mysql.jar;." workspace.bookshop
 4. In Linux/Unix system: java -cp ../mysql.jar:. workspace.bookshop
 5. Or you can use an IDE (such as *IDEA*). Remember to add mysql.jar as an external jar to your project's Java build path.
 6. You can try the system with user name and password registered, and the features can be tested with the following accounts.
