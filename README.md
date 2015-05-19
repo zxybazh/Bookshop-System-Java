@@ -30,10 +30,13 @@ Contributed by [**zxybazh**](http://www.zxybazh.me)
 4. In Linux/Unix system: java -cp ../mysql.jar:. workspace.bookshop
 5. Or you can use an IDE (such as *IDEA*). Remember to add mysql.jar as an external jar to your project's Java build path.
 6. You can try the system with user name and password registered, and the features can be tested with the following accounts.
- 
+
+***
+
 >**TEST ACCOUNT**
-> | user name | password|
-> |---------------|-------------|
-> |tiny|tiny|
-> |admin|admin|
+
+>- tiny@tiny
+>- admin@admin
+>- potaty@potaty
+>- *tip*: the account are used as user name@password, and they happen to be the same.
 
