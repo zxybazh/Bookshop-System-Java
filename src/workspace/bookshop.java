@@ -1594,8 +1594,8 @@ public class bookshop {
             System.out.println("Welcome and Goodbye~");
             con.closeConnection();
         } catch (Exception e) {
-        	 if (debug) e.printStackTrace();
-        	 System.err.println (">_< Cannot connect to database server!!!");
+        	if (debug) e.printStackTrace();
+        	System.err.println (">_< Cannot connect to database server!!!");
         }
     }
 }
